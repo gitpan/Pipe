@@ -1,0 +1,140 @@
+NAME
+    Pipe - Framework to create pipes using iterators
+
+SYNOPSIS
+     use Pipe;
+     my @input = Pipe->cat("t/data/file1", "t/data/file2");
+     my @lines = Pipe->cat("t/data/file1", "t/data/file2")->chomp;
+     my @uniqs = Pipe->cat("t/data/file1", "t/data/file2")->chomp->uniq;
+
+     Pipe->cat("t/data/file1", "t/data/file2")->uniq->print("t/data/out");
+
+WARNING
+    This is Alpha version. The user API might still change
+
+DESCRIPTION
+    Building an iterating pipe with prebuilt and home made tubes.
+
+    Tubes available in this distibution:
+
+  cat
+    Read in the lines of one or more file.
+
+  chomp
+    Remove trailing newlines from each line.
+
+  for
+    Pipe->for(@array)
+
+    Iterates over the elements of an array. Basically the same as the for or
+    foreach loop of Perl.
+
+  glob
+    Implements the Perl glob function.
+
+  grep
+    Selectively pass on values.
+
+    Can be used either with a regex:
+
+     ->grep( qr/regex/ )
+
+    Or with a sub:
+
+     ->grep( sub { length($_[0]) > 12 } )
+
+    Very similar to the built-in grep command of Perl but instead of regex
+    you have to pass a compiled regex using qr// and instead of a block you
+    have to pass an anonymous sub {}
+
+  map
+    Similar to the Perl map construct, except that instead of a block you
+    pass an anonymous function sub {}.
+
+     ->map(  sub {  length $_[0] } );
+
+  print
+    TODO Not implemented yet
+
+    Prints out its input. By default it prints to STDOUT but the user can
+    supply a filename or a filehandle.
+
+     Pipe->cat("t/data/file1", "t/data/file2")->print;
+     Pipe->cat("t/data/file1", "t/data/file2")->print("out.txt");
+     Pipe->cat("t/data/file1", "t/data/file2")->print(':a', "out.txt");
+
+  sort
+    Similar to the built in sort function of Perl. As sort needs to have all
+    the data in the memory, once you use sort in the Pipe it stops being an
+    iterator for the rest of the pipe.
+
+    By default it sorts based on ascii table but you can provide your own
+    sorting function. The two values to be compared are passed to this
+    function.
+
+     Pipe->cat("t/data/numbers1")->chomp->sort( sub { $_[0] <=> $_[1] } );
+
+  uniq
+    Similary to the unix uniq command eliminate duplicate conscutive values.
+
+    23, 23, 19, 23 becomes 23, 19, 23
+
+    Warning: as you can see from the example this method does not give real
+    unique values, it only eliminates consecutive duplicates.
+
+Building your own tube
+    If you would like to add a tube called "thing" create a module called
+    Pipe::Tube::Thing that inherits from Pipe::Tube, our abstract Tube.
+
+    Implement one or more of these methods in your subclass as you please.
+
+  init
+    Will be called once when initializing the pipeline. It will get ($self,
+    @args) where $self is the Pipe::Tube::Thing object and @args are the
+    values given as parameters to the ->thing(@args) call in the pipeline.
+
+  run
+    Will be called every time the previous tube in the pipe returns one or
+    more values. It can return a list of values that will be passed on to
+    the next tube. If based on the current state of Thing there is nothing
+    to do you should call return; with no parameters.
+
+  finish
+    Will be called once when the Pipe Manager notices that this Thing should
+    be finished. This happens when Thing is the first active element in the
+    pipe (all the previous tubes have already finshed) and its run() method
+    returns an empty list.
+
+    The finish() method should return a list of values that will be passed
+    on to the next tube in the pipe. This is especially useful for Tubes
+    such as sort that can to their thing only after they have received all
+    the input.
+
+  Debugging your tube
+    You can call $self->logger("some message") from your tube. It will be
+    printed to pipe.log if someone sets $Pipe::DEBUG = 1;
+
+BUGS
+    Probably plenty.
+
+Development
+    The Subversion repository is here:
+    http://svn1.hostlocal.com/szabgab/trunk/Pipe/
+
+Thanks
+    to Gaal Yahas
+
+AUTHOR
+    Gabor Szabo <gabor@pti.co.il>
+
+Copyright
+    Copyright 2006 by Gabor Szabo <gabor@pti.co.il>.
+
+    This program is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+
+    See http://www.perl.com/perl/misc/Artistic.html
+
+See Also
+    Shell::Autobox
+
