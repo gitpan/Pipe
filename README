@@ -23,6 +23,12 @@ DESCRIPTION
   chomp
     Remove trailing newlines from each line.
 
+  find
+    Pipe->find(".")
+
+    Returns every file, directory, etc. under the directory tree passed to
+    it.
+
   for
     Pipe->for(@array)
 
@@ -63,6 +69,10 @@ DESCRIPTION
      Pipe->cat("t/data/file1", "t/data/file2")->print("out.txt");
      Pipe->cat("t/data/file1", "t/data/file2")->print(':a', "out.txt");
 
+  say
+    It is the same as print but adds a newline at the end of each line. The
+    name is Perl6 native.
+
   sort
     Similar to the built in sort function of Perl. As sort needs to have all
     the data in the memory, once you use sort in the Pipe it stops being an
@@ -74,8 +84,27 @@ DESCRIPTION
 
      Pipe->cat("t/data/numbers1")->chomp->sort( sub { $_[0] <=> $_[1] } );
 
+  tuple
+    Given one or more array references, on every iteration it will return an
+    n-tuple (n is the number of arrays), one value from each source array.
+
+        my @a = qw(foo bar baz moo);
+        my @b = qw(23  37  77  42);
+
+        my @one_tuple = Pipe->tuple(\@a);
+        # @one_tuple is ['foo'], ['bar'], ['baz'], ['moo']
+
+        my @two_tuple = Pipe->tuple(\@a, \@b);
+        # @two_tuple is ['foo', 23], ['bar', 37], ['baz', 77], ['moo', 42]
+
+    Input: disregards any input so it can be used as a starting element of a
+    Pipe
+
+    Ouput: array refs of n elements
+
   uniq
-    Similary to the unix uniq command eliminate duplicate conscutive values.
+    Similary to the unix uniq command eliminate duplicate consecutive
+    values.
 
     23, 23, 19, 23 becomes 23, 19, 23
 
@@ -83,7 +112,7 @@ DESCRIPTION
     unique values, it only eliminates consecutive duplicates.
 
 Building your own tube
-    If you would like to add a tube called "thing" create a module called
+    If you would like to build a tube called "thing" create a module called
     Pipe::Tube::Thing that inherits from Pipe::Tube, our abstract Tube.
 
     Implement one or more of these methods in your subclass as you please.
@@ -114,8 +143,82 @@ Building your own tube
     You can call $self->logger("some message") from your tube. It will be
     printed to pipe.log if someone sets $Pipe::DEBUG = 1;
 
+Examples
+    A few examples of UNIX Shell commands combined with pipelines
+
+    *   cat several files together
+
+        UNIX:
+
+         cat file1 file2 > filenew
+
+        Perl:
+
+         open my $out, ">", "filenew" or die $!;
+         while (<>) {
+            print $out $_;
+         }
+
+        Perl with Pipe:
+
+         perl -MPipe 'Pipe->cat(@ARG)->print("filenew")'
+
+    *   UNIX:
+
+         grep REGEX file* | uniq
+
+        Perl:
+
+         my $last;
+         while (<>) {
+            next if not /REGEX/;
+
+            if (not defined $last) {
+                $last = $_;
+                print;
+                next;
+            }
+            next if $last eq $_;
+            $last = $_;
+            print;
+         }
+
+        Perl with Pipe:
+
+        one of these will work, we hope:
+
+         Pipe->grep(qr/REGEX/, <file*>)->uniq->print
+         Pipe->cat(<file*>)->grep(qr/REGEX/)->uniq->print
+         Pipe->files("file*")->cat->grep(qr/REGEX/)->uniq->print
+
+    *   UNIX:
+
+         find / -name filename -print 
+
+        Perl with Pipe:
+
+         perl -MPipe -e'Pipe->find("/")->grep(qr/filename/)->print'
+
+    *   Delete all the CVS directories in a directory tree (from the journal
+        of brian_d_foy) http://use.perl.org/~brian_d_foy/journal/29267
+
+        UNIX:
+
+         find . -name CVS | xargs rm -rf
+
+         find . -name CVS -type d -exec rm -rf '{}' \;
+
+        Perlish:
+
+         find2perl . -name CVS -type d -exec rm -rf '{}' \; > rm-cvs.pl
+         perl rm-cvs.pl
+
+        Perl with Pipe:
+
+         perl -MPipe -e'Pipe->find(".")->grep(qr/^CVS$/)->rmtree;
+
 BUGS
-    Probably plenty.
+    Probably plenty but nothing I know of. Please report them to the author.
 
 Development
     The Subversion repository is here:

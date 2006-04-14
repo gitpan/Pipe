@@ -10,12 +10,15 @@ lib/Pipe/Tube.pm
 
 lib/Pipe/Tube/Cat.pm
 lib/Pipe/Tube/Chomp.pm
+lib/Pipe/Tube/Find.pm
 lib/Pipe/Tube/For.pm
 lib/Pipe/Tube/Glob.pm
 lib/Pipe/Tube/Grep.pm
 lib/Pipe/Tube/Map.pm
 lib/Pipe/Tube/Print.pm
+lib/Pipe/Tube/Say.pm
 lib/Pipe/Tube/Sort.pm
+lib/Pipe/Tube/Tuple.pm
 lib/Pipe/Tube/Uniq.pm
 
 t/pipe.t

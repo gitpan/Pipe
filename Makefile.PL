@@ -8,6 +8,7 @@ WriteMakefile
           'VERSION_FROM' => 'lib/Pipe.pm',
           'PREREQ_PM' => {
                            'Test::More' => '0.47',
+                           'File::Find::Rule' => '0',
                            'Want' => '0'
                          }
         )

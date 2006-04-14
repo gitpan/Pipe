@@ -5,7 +5,7 @@ use warnings;
 use Want qw(want);
 our $DEBUG;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 sub logger {
     my ($self, $msg, $class) = @_;
@@ -56,8 +56,9 @@ sub run_pipe {
     while (1) {
         $self->logger("Pipe::run_pipe calls in: $in");
         my @res = $in->run;
-        $self->logger("Pipe::run_pipe resulted in " . join "|", @res);
+        $self->logger("Pipe::run_pipe resulted in {" . join("|", @res) . "}");
         if (not @res) {
+            $self->logger("Pipe::run_pipe calling finish");
             @res = $in->finish();
             $in_finished = 1;
         }
@@ -120,6 +121,12 @@ Read in the lines of one or more file.
 Remove trailing newlines from each line.
 
 
+=head2 find
+
+Pipe->find(".")
+
+Returns every file, directory, etc. under the directory tree passed to it.
+
 =head2 for
 
 Pipe->for(@array)
@@ -165,6 +172,11 @@ By default it prints to STDOUT but the user can supply a filename or a filehandl
  Pipe->cat("t/data/file1", "t/data/file2")->print("out.txt");
  Pipe->cat("t/data/file1", "t/data/file2")->print(':a', "out.txt");
 
+=head2 say
+
+It is the same as print but adds a newline at the end of each line.
+The name is Perl6 native.
+
 =head2 sort
 
 Similar to the built in sort function of Perl. As sort needs to have all 
@@ -176,9 +188,27 @@ sorting function. The two values to be compared are passed to this function.
 
  Pipe->cat("t/data/numbers1")->chomp->sort( sub { $_[0] <=> $_[1] } );
 
+=head2 tuple
+
+Given one or more array references, on every iteration it will return an n-tuple
+(n is the number of arrays), one value from each source array.
+
+    my @a = qw(foo bar baz moo);
+    my @b = qw(23  37  77  42);
+
+    my @one_tuple = Pipe->tuple(\@a);
+    # @one_tuple is ['foo'], ['bar'], ['baz'], ['moo']
+
+    my @two_tuple = Pipe->tuple(\@a, \@b);
+    # @two_tuple is ['foo', 23], ['bar', 37], ['baz', 77], ['moo', 42]
+
+Input: disregards any input so it can be used as a starting element of a Pipe
+
+Ouput: array refs of n elements
+
 =head2 uniq
 
-Similary to the unix uniq command eliminate duplicate conscutive values.
+Similary to the unix uniq command eliminate duplicate consecutive values.
 
 23, 23, 19, 23     becomes  23, 19, 23
 
@@ -188,7 +218,7 @@ values, it only eliminates consecutive duplicates.
 
 =head1 Building your own tube
 
-If you would like to add a tube called "thing" create a module called 
+If you would like to build a tube called "thing" create a module called 
 Pipe::Tube::Thing that inherits from Pipe::Tube, our abstract Tube.
 
 Implement one or more of these methods in your subclass as you please.
@@ -217,15 +247,105 @@ The finish() method should return a list of values that will be passed on to the
 tube in the pipe. This is especially useful for Tubes such as sort that can to their thing
 only after they have received all the input.
 
-
 =head2 Debugging your tube
 
 You can call $self->logger("some message") from your tube. 
 It will be printed to pipe.log if someone sets $Pipe::DEBUG = 1;
 
+=head1 Examples
+
+A few examples of UNIX Shell commands combined with pipelines
+
+=over 4
+
+=item *
+
+cat several files together
+
+UNIX:
+
+ cat file1 file2 > filenew
+
+Perl:
+
+ open my $out, ">", "filenew" or die $!;
+ while (<>) {
+    print $out $_;
+ }
+
+
+Perl with Pipe:
+
+ perl -MPipe 'Pipe->cat(@ARG)->print("filenew")'
+
+=item *
+
+UNIX:
+
+ grep REGEX file* | uniq
+
+Perl:
+
+ my $last;
+ while (<>) {
+    next if not /REGEX/;
+
+    if (not defined $last) {
+        $last = $_;
+        print;
+        next;
+    }
+    next if $last eq $_;
+    $last = $_;
+    print;
+ }
+
+Perl with Pipe:
+
+one of these will work, we hope:
+
+ Pipe->grep(qr/REGEX/, <file*>)->uniq->print
+ Pipe->cat(<file*>)->grep(qr/REGEX/)->uniq->print
+ Pipe->files("file*")->cat->grep(qr/REGEX/)->uniq->print
+
+=item *
+
+UNIX:
+
+ find / -name filename -print 
+
+Perl with Pipe:
+
+ perl -MPipe -e'Pipe->find("/")->grep(qr/filename/)->print'
+
+=item *
+
+Delete all the CVS directories in a directory tree (from the journal of brian_d_foy)
+http://use.perl.org/~brian_d_foy/journal/29267
+
+UNIX:
+
+ find . -name CVS | xargs rm -rf
+
+ find . -name CVS -type d -exec rm -rf '{}' \;
+
+Perlish:
+
+ find2perl . -name CVS -type d -exec rm -rf '{}' \; > rm-cvs.pl
+ perl rm-cvs.pl
+
+Perl with Pipe:
+
+ perl -MPipe -e'Pipe->find(".")->grep(qr/^CVS$/)->rmtree;
+
+
+=back
+
+
+
 =head1 BUGS
 
-Probably plenty.
+Probably plenty but nothing I know of. Please report them to the author.
 
 =head1 Development
 
@@ -254,7 +374,8 @@ L<Shell::Autobox>
 
 =cut
 
-
+# TODOs, ideas
+# ----------------
 # Every pipe element have 
 # @output = $obj->run(@input)
 # @output = $obj->finish is called when the previous thing in the pipe finishes
@@ -281,11 +402,25 @@ L<Shell::Autobox>
 
 # TODO 
 #   find
-#   flat (put in after a sort and it will flaten out the calls.
-#   Pipe->sub( sub {} ) can get any subroutine and will insert it in the pipe
-#   split up the input stream
-# process groups of values
-
+#     Improve find to provid full interface to File::Find::Rule or 
+#     implement a simple version for the standard Pipe and move the one 
+#     using File::Find::Rule to a separate distribution.
+#   sub
+#     Pipe->sub( sub {} ) can get any subroutine and will insert it in the pipe
+#   tupple  
+#     given two or more array, on each call reaturn an array created from one element
+#     of each of the input array. Behavior in case the arrays are not the same length
+#     should be defined.
+#
+#   process groups of values
+#     given an input stream once every n iteration return an array of the n latest elemenets 
+#     and in the other n-1 iterations return (). What should happen if number of elements is
+#     not dividable by n ?
+#
+#   say
+#     print with \n added like in Perl6 but with optional ("filename") to print to that file
+#     without explicitely opening it.
+#     
 #=head2 flat
 
 #Will flatten a pipe. I am not sure it is useful at all.
@@ -297,7 +432,18 @@ L<Shell::Autobox>
 # Actualy I think ->for will do the same
 #
 
-
-
+# - Enable alternative Pipe Manager ?
+# - Add a call to every tube to be executed before we start running the pipe but after building it ?
+# - Describe the access to the Pipe object from the Tubes to see how a tube could change the pipe....
+#
+# For each tube, describe what are the expected input values, command line values and output values
+#
+# Check if the context checking needs any improvement
+# Go over all the contexts mentioned in Want and try to build a test to each one of them
+#
+# 
+#  split up the input stream and have more than one tails
+#
+ 
 1;
 

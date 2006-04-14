@@ -1,8 +1,9 @@
 #!/usr/bin/perl -w
 use strict;
 
-use Test::More tests => 35;
+use Test::More tests => 46;
 use Pipe;
+use Data::Dumper;
 #$Pipe::DEBUG = 1;
 
 my $warn;
@@ -151,7 +152,6 @@ $SIG{__WARN__} = sub {$warn = shift;};
     my @input = Pipe->cat("t/data/file1", "t/data/file2")
                     ->map(  sub {{str => $_[0], long => length $_[0]}} );
     is $warn, '', "no warning";
-    use Data::Dumper;
     @ARGV = ("t/data/file1", "t/data/file2");
     my @expected = map {{ str => $_, long => length $_}} <>;
     is_deeply \@input, \@expected, "reading two files and maping the lines";
@@ -183,10 +183,82 @@ $SIG{__WARN__} = sub {$warn = shift;};
     
 }
 
+{
+    $warn = '';
+    my @files = Pipe->find("t");
+    #diag Dumper \@files;
+    is $warn, '', "no warning";
+}
 
 #Pipe->cat("t/data/file1", "t/data/file2")->print;
-#Pipe->cat("t/data/file1", "t/data/file2")->print("out");
-#Pipe->cat("t/data/file1", "t/data/file2")->print(':a', "out");
+{
+    unlink "out";
+    $warn = '';
+    Pipe->cat("t/data/file1", "t/data/file2")->print("out");
+    is $warn, '', "no warning";
+    
+    @ARGV = ("t/data/file1", "t/data/file2");
+    my @expected = <>;
+    @ARGV = ("out");
+    my @received = <>;
+    is_deeply \@received, \@expected, "reading two files and piping through print to filename";
+}
+
+{
+    unlink "out";
+    $warn = '';
+    open my $out, ">", "out" or die $!;
+    Pipe->cat("t/data/file1", "t/data/file2")->print($out);
+    close $out;
+    is $warn, '', "no warning";
+
+    @ARGV = ("t/data/file1", "t/data/file2");
+    my @expected = <>;
+    @ARGV = ("out");
+    my @received = <>;
+    is_deeply \@received, \@expected, "reading two files and piping through print to filehandle";
+}
+
+#Pipe->cat("t/data/file1", "t/data/file2")->chomp->say;
+{
+    unlink "out";
+    $warn = '';
+    Pipe->cat("t/data/file1", "t/data/file2")->chomp->say("out");
+    is $warn, '', "no warning";
+    
+    @ARGV = ("t/data/file1", "t/data/file2");
+    my @expected = <>;
+    @ARGV = ("out");
+    my @received = <>;
+    is_deeply \@received, \@expected, "reading two files and piping through print to filename";
+}
+
+{
+    unlink "out";
+    $warn = '';
+    open my $out, ">", "out" or die $!;
+    Pipe->cat("t/data/file1", "t/data/file2")->chomp->say($out);
+    close $out;
+    is $warn, '', "no warning";
+
+    @ARGV = ("t/data/file1", "t/data/file2");
+    my @expected = <>;
+    @ARGV = ("out");
+    my @received = <>;
+    is_deeply \@received, \@expected, "reading two files and piping through print to filehandle";
+}
 
 
+{
+    my @a = qw(foo bar baz moo);
+    my @b = qw(23  37  77  42);
+
+    my @one_tuple = Pipe->tuple(\@a);
+    is_deeply \@one_tuple, [['foo'], ['bar'], ['baz'], ['moo']], "1-tuple";
+
+    my @two_tuple = Pipe->tuple(\@a, \@b);
+    is_deeply \@two_tuple, [['foo', 23], ['bar', 37], ['baz', 77], ['moo', 42]], "2-tuple";
+
+    # catch die in case array was passed insted of arrayref ?
+}
 

@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name: Pipe
-version: 0.01
+version: 0.02
 author:
   - Gabor Szabo <gabor@pti.co.il>
 abstract: Framework to create pipes using iterators
