@@ -1,8 +1,49 @@
---- #YAML:1.0
+---
 name: Pipe
-version: 0.02
+version: 0.03
 author:
-  - Gabor Szabo <gabor@pti.co.il>
+  - 'Gabor Szabo <gabor@pti.co.il>'
 abstract: Framework to create pipes using iterators
 license: perl
-generated_by: Module::Build version 0.2612, without YAML.pm
+resources:
+  license: http://dev.perl.org/licenses/
+requires:
+  File::Find::Rule: 0
+  Test::More: 0.47
+  Want: 0
+provides:
+  Pipe:
+    file: lib/Pipe.pm
+    version: 0.03
+  Pipe::Tube:
+    file: lib/Pipe/Tube.pm
+  Pipe::Tube::Cat:
+    file: lib/Pipe/Tube/Cat.pm
+  Pipe::Tube::Chomp:
+    file: lib/Pipe/Tube/Chomp.pm
+  Pipe::Tube::Find:
+    file: lib/Pipe/Tube/Find.pm
+  Pipe::Tube::For:
+    file: lib/Pipe/Tube/For.pm
+  Pipe::Tube::Glob:
+    file: lib/Pipe/Tube/Glob.pm
+  Pipe::Tube::Grep:
+    file: lib/Pipe/Tube/Grep.pm
+  Pipe::Tube::Map:
+    file: lib/Pipe/Tube/Map.pm
+  Pipe::Tube::Print:
+    file: lib/Pipe/Tube/Print.pm
+  Pipe::Tube::Say:
+    file: lib/Pipe/Tube/Say.pm
+  Pipe::Tube::Sort:
+    file: lib/Pipe/Tube/Sort.pm
+  Pipe::Tube::Split:
+    file: lib/Pipe/Tube/Split.pm
+  Pipe::Tube::Tuple:
+    file: lib/Pipe/Tube/Tuple.pm
+  Pipe::Tube::Uniq:
+    file: lib/Pipe/Tube/Uniq.pm
+generated_by: Module::Build version 0.2805
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2

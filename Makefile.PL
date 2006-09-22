@@ -5,6 +5,7 @@ WriteMakefile
           'PL_FILES' => {},
           'INSTALLDIRS' => 'site',
           'NAME' => 'Pipe',
+          'EXE_FILES' => [],
           'VERSION_FROM' => 'lib/Pipe.pm',
           'PREREQ_PM' => {
                            'Test::More' => '0.47',
