@@ -1,13 +1,6 @@
-Build.PL
-MANIFEST			This list of files
-META.yml
-README
-Makefile.PL
 Changes
-
 lib/Pipe.pm
 lib/Pipe/Tube.pm
-
 lib/Pipe/Tube/Cat.pm
 lib/Pipe/Tube/Chomp.pm
 lib/Pipe/Tube/Find.pm
@@ -21,11 +14,14 @@ lib/Pipe/Tube/Sort.pm
 lib/Pipe/Tube/Split.pm
 lib/Pipe/Tube/Tuple.pm
 lib/Pipe/Tube/Uniq.pm
-
-t/pipe.t
+Makefile.PL
+MANIFEST			This list of files
+t/90-pod.t
+t/91-pod-coverage.t
+t/99-critic.t
 t/data/file1
 t/data/file2
 t/data/numbers1
-t/90-pod.t
-t/91-pod-coverage.t
-
+t/pipe.t
+META.yml                                 Module YAML meta-data (added by MakeMaker)
+META.json                                Module JSON meta-data (added by MakeMaker)
