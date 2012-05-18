@@ -1,15 +1,16 @@
 package Pipe::Tube::Cat;
 use strict;
 use warnings;
+use 5.006;
 
 use base 'Pipe::Tube';
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 sub init {
     my ($self, @files) = @_;
     @{ $self->{files} } = @files;
-    
+
     return $self;
 }
 
@@ -18,7 +19,7 @@ sub run {
     my ($self, @files) = @_;
 
     push @{ $self->{files} }, @files;
- 
+
     my $fh = $self->{fh};
     while (1) {
         if (not defined $fh) {

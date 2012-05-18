@@ -25,4 +25,4 @@ requires:
   Want: 0.21
 resources:
   repository: https://github.com/szabgab/Pipe
-version: 0.04
+version: 0.05
